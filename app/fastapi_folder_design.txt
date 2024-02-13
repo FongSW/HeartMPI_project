@@ -1,0 +1,83 @@
+======================================== FastAPI Folder Design ========================================
+
+fast_api
+	|--- utility_function
+		|--- quantitative (function)
+			|--- py files
+		|--- qualitative (function)
+			|--- cropped_images
+				|--- Mask (mask vessel)
+				|--- crop.py
+				|--- crop_region_vessel.py
+
+	|--- route
+		|--- feature_extraction.py
+		|--- base_inference.py
+		|--- airflow_inference.py
+
+	|--- model (ปัญหาที่เจอคือถ้าเก็บ log model โดยที่ไม่ลบมันจะบวมมากๆ)
+		|--- base
+			base_model_info.csv
+			|--- quantitative
+				|--- PATIENT
+				|--- LCX
+				|--- LAD
+				|--- RCA
+			|--- qualitative
+				|--- PATIENT
+				|--- LCX
+				|--- LAD
+				|--- RCA
+		|--- airflow
+			|--- quantitative
+				|--- quantitative_model_info.csv
+				|--- best_model (เก็บ best model 1 file/folder)
+					|--- PATIENT
+						|--- model_name.pkl
+						|--- model_describe.txt
+					|--- LCX
+					|--- LAD
+					|--- RCA
+				|--- best_model (เก็บ best model 1 file/folder)
+					|--- PATIENT
+						|--- xgb_quantitative_n.n.n_model.pkl
+						|--- xgb_quantitative_n.n.n_parameter.txt
+					|--- LCX
+					|--- LAD
+					|--- RCA
+				|--- archived_model (เก็บ best เก่าไว้)
+					|--- PATIENT
+						|--- xgb
+							|--- 1.1.23 (folder version: D.M.Y)
+								|--- xgb_quantitative_1.1.23_model.pkl (ชื่อเวอร์ชั่นเป็นไปตามวันที่ ที่รัน airflow มาชื่อที่หลังเปลี่ยนได้)
+								|--- xgb_quantitative_1.1.23_parameter.txt
+							|--- .
+							|--- .
+							|--- .
+							|--- n.n.n
+						|--- lgbm
+						|--- superlearner
+					|--- LCX
+					|--- LAD
+					|--- RCA
+			|--- qualitative
+				|--- qualitative_model_info.csv
+				|--- best_model
+					|--- PATIENT
+					|--- LCX
+					|--- LAD
+					|--- RCA
+				|--- archived_model (เก็บ best เก่าไว้)
+					|--- PATIENT
+						|--- airflow_pateint_qualitative_1.1.23.h5 (ชื่อเวอร์ชั่นเป็นไปตามวันที่ ที่รัน airflow มาชื่อที่หลังเปลี่ยนได้)
+						|--- .
+						|--- .
+						|--- .
+						|--- airflow_patient_qualitative_n.n.n.h5 
+					|--- LCX
+					|--- LAD
+					|--- RCA
+
+	|--- schema
+		|--- patient_info.py (db pydantic มาชื่อที่หลังเปลี่ยนได้)
+		|--- input_patient.py (pydantic รับค่า post [(hn, path_file), (hn, date)]มาชื่อที่หลังเปลี่ยนได้)

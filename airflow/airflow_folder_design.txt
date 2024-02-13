@@ -1,0 +1,18 @@
+airflow
+    |--- dags
+        |--- utility_function
+            |--- quantitative
+                |--- model_temp (clear เสมอหลังทำเสร็จ)
+                |--- data_temp (clear เสมอหลังทำเสร็จ)
+                |--- functionX.py
+            |--- qualitative
+                |--- model_temp (clear เสมอหลังทำเสร็จ)
+                |--- data_temp  (clear เสมอหลังทำเสร็จ)
+                |--- functionX.py
+            |--- query_db.py (query กลางของ quanti, quali)
+        |--- dags_quantitative.py
+        |--- dags_qualitative.py
+    |--- logs
+    |--- plugins
+    |--- airflow_requirement.txt
+    |--- dockerfile

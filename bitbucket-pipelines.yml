@@ -1,0 +1,65 @@
+definitions:
+  steps:
+    - step: &rsync-update-and-ssh-run
+        name: Update files and run deploy commands
+        script:
+          - rsync --progress -ru --chmod=ugo=rwX --delete-after --exclude=/usr --exclude=airflow/logs --exclude=airflow/dags/utility_function/qualitative/data_temp --exclude=airflow/dags/utility_function/qualitative/model_temp --exclude=airflow/dags/heartmpi-front-web --exclude=airflow/dags/hearmpi-front-web --exclude=app/heartmpi-front-web --exclude=.env --exclude=app/utility_function/data_for_test --exclude=app/model/airflow/qualitative/archived_model/* --exclude=app/model/airflow/qualitative/best_model/* --exclude=app/model/airflow/quantitative/archived_model/* --exclude=app/model/airflow/quantitative/best_model/* --exclude=**/__pycache__/ $SOURCE_PATHS $REMOTE_USER@$REMOTE_IP:$REMOTE_PATH
+          - ssh -A $REMOTE_USER@$REMOTE_IP "cd $REMOTE_PATH && $DEPLOY_COMMAND"
+
+    - step: &bump-and-tag-app-ver
+        name: Bump app version and tag commit for main branch
+        script:
+          - if [ "$BITBUCKET_PR_DESTINATION_BRANCH" != main ]; then exit 0 ; fi
+          # This will only run on PRs to main branch (main)
+          - apt-get update && apt-get -y install jq
+          # REPO_ACCESS_TOKEN from Repository Settings > Access tokens
+          - |
+            export APP_VERSION=$(curl -fsS -H 'Content-Type: application/json' -H "Authorization: Bearer ${REPO_ACCESS_TOKEN}" \
+            "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_FULL_NAME}/pullrequests/${BITBUCKET_PR_ID}" \
+            | jq -r '.title' | cut -d" " -f1)
+          - echo "App version=${APP_VERSION}"
+          - echo "v${APP_VERSION}_$(date +%d%m%Y)" > ./version.txt
+          - git add ./version.txt
+          - git commit -m "[skip ci] Bump version" && git push || true
+          - git tag $APP_VERSION && git push origin refs/tags/${APP_VERSION} || true
+
+pipelines:
+  branches:
+    develop:
+      - step:
+          <<: *rsync-update-and-ssh-run
+          deployment: Test
+          condition:
+            changesets:
+              includePaths:
+                - "airflow/**"
+                - "app/**"
+                - "docker-compose.yaml"
+
+    main:
+      - step:
+          name: Dummy step to make manual trigger works
+          script:
+            - "true"
+      - step:
+          <<: *rsync-update-and-ssh-run
+          trigger: manual
+          deployment: Production
+          condition:
+            changesets:
+              includePaths:
+                - "airflow/**"
+                - "app/**"
+                - "docker-compose.yaml"
+
+  pull-requests:
+    develop:
+      - step: *bump-and-tag-app-ver
+    'hotfix/*':
+      - step: *bump-and-tag-app-ver
+
+  custom:
+    deploy-dev:
+      - step:
+          <<: *rsync-update-and-ssh-run
+          deployment: Test
